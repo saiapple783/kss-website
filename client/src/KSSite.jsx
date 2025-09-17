@@ -271,7 +271,7 @@ body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,
 .kss-hero-img{width:100%; height:auto; display:block}
 .kss-hero-badge{position:absolute; left:50%; transform:translate(-50%, -54%); top:0; width:120px; height:auto; mix-blend-mode:multiply}
 .kss-hero-fade{position:absolute; inset:auto 0 -8px 0; height:90px; background:linear-gradient(180deg, rgba(247,193,74,0) 0%, rgba(217,110,18,0.35) 70%, rgba(217,110,18,0.65) 100%); pointer-events:none}
-.telugu{font-weight:800; color:#b2451c; margin:18px 0 4px; font-size:22px; letter-spacing:.2px; text-shadow:0 1px 0 rgba(255,255,255,.25);} 
+.telugu{font-weight:800; color:white; margin:18px 0 4px; font-size:22px; letter-spacing:.2px; text-shadow:0 1px 0 rgba(255,255,255,.25);} 
 .kss-welcome{margin:2px 0 6px; font-size:20px; color:#b2451c; font-weight:700; letter-spacing:.2px}
 .kss-sub{max-width:740px; color:#3d2b19; opacity:.9}
 .kss-cta-row{display:flex; gap:12px; margin-top:16px}
