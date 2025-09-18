@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_dRm7sL2CD0Jj8as2eugbm00";
 const NAV_ITEMS = [
   { key: "home", label: "Home" },
   { key: "about", label: "About US" },
@@ -41,7 +42,7 @@ export default function KammaSevaSamithiSite() {
         {active === "register" && <Register />}
         {active === "donate" && <Donate />}
         {active === "contact" && <Contact />}
-        {active === "event" && <Placeholder title="Event" />}
+        {active === "event" && <Event />}
         {active === "gallery" && <Placeholder title="Gallery" />}
       </main>
     </div>
@@ -102,6 +103,39 @@ function Home({ onNav }) {
     </div>
   );
 }
+
+function Event() {
+  const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_dRm7sL2CD0Jj8as2eugbm00"; // your link
+
+  const goToStripe = () => {
+    window.location = STRIPE_PAYMENT_LINK;
+  };
+
+  return (
+    <div className="kss-event">
+      <h2 className="kss-form-title">Event</h2>
+
+      <div
+        className="event-card"
+        onClick={goToStripe}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && goToStripe()}
+        aria-label="Register for 2025 Picnic"
+        title="Click to register & pay ($20 per ticket — choose quantity on Stripe)"
+      >
+        <img className="event-img" src="/images/picnic.png" alt="2025 Picnic" />
+        <div className="event-meta">
+          <div className="event-title">2025 Vanabhojanalu</div>
+          <div className="event-info">Sep 12,2025 (11AM-6PM)</div>
+          <div className="event-sub">Click to Register & Pay ($20 per ticket)</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 
 function InfoCard({ icon, title, desc, cta, onClick }) {
   return (
@@ -252,6 +286,43 @@ function Donate() { return (<div className="kss-generic"><h2>Donate</h2><p>Your 
 function Placeholder({ title }){ return (<div className="kss-generic"><h2>{title}</h2><p>Coming soon.</p></div>); }
 
 const globalCSS = `
+/* One-card event layout */
+.kss-event{ max-width:980px; margin:0 auto; }
+.event-card{
+  width:333px; background:#fff; border-radius:12px; overflow:hidden;
+  box-shadow:0 10px 24px rgba(0,0,0,.12); cursor:pointer;
+  transition:transform .12s ease, box-shadow .2s ease;
+}
+.event-card:hover{ transform:translateY(-2px); box-shadow:0 14px 30px rgba(0,0,0,.16); }
+.event-card.disabled{ opacity:.6; cursor:not-allowed; }
+.event-img{ display:block; width:100%; height:auto; }
+.event-meta{ padding:10px 12px; text-align:center; }
+.event-title{ font-weight:800; color:#1d2b20; }
+.event-sub{ color:#6b5b44; font-size:13px; }
+
+/* Quantity modal */
+.qty-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.35);
+  display:flex; align-items:center; justify-content:center; z-index:50;
+}
+.qty-modal{
+  width:min(420px, 92vw); background:#fff; border-radius:16px; padding:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+}
+.qty-title{ font-weight:800; color:#1d2b20; margin-bottom:8px; }
+.qty-row{ display:flex; align-items:center; gap:12px; margin:10px 0 6px; }
+.qty-row label{ min-width:150px; color:#3c2b17; font-weight:700; }
+.qty-total{ margin:8px 0 14px; color:#7b3a22; font-weight:800; }
+.qty-actions{ display:flex; gap:10px; justify-content:flex-end; }
+
+
+/* keep site-wide CTAs bigger + rounded like home */
+.btn, .btn.primary,  .kss-submit, .send-btn{
+  border-radius:9999px; padding:14px 24px; font-size:16px; font-weight:700;background-color:red;
+}
+
+.btn.ghost, .btn.outline{border-radius:9999px; padding:14px 24px; font-size:16px; font-weight:700;background-color:white}
+
 :root{ --sidebar-bg:#FFF6E6; --accent:#E6602E; --accent-700:#C94919; --text:#2B2B2B; --card-bg:#FFFFFF; --shadow:0 8px 24px rgba(0,0,0,.08); }
 *{box-sizing:border-box} html,body,#root{height:100%}
 body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,Helvetica,Arial; color:var(--text)}
@@ -269,9 +340,9 @@ body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,
 /* hero */ .kss-hero{display:flex; flex-direction:column; align-items:center; text-align:center; margin-top:10px; position:relative}
 .kss-hero-imgwrap{position:relative; width:min(400px,72vw); filter:drop-shadow(0 18px 36px rgba(0,0,0,.28));}
 .kss-hero-img{width:100%; height:auto; display:block}
-.kss-hero-badge{position:absolute; left:50%; transform:translate(-50%, -54%); top:0; width:120px; height:auto; mix-blend-mode:multiply}
+.kss-hero-badge{position:absolute; left:50%; transform:translate(-50%, -54%); top:17px; width:120px; height:auto; mix-blend-mode:multiply}
 .kss-hero-fade{position:absolute; inset:auto 0 -8px 0; height:90px; background:linear-gradient(180deg, rgba(247,193,74,0) 0%, rgba(217,110,18,0.35) 70%, rgba(217,110,18,0.65) 100%); pointer-events:none}
-.telugu{font-weight:800; color:#b2451c; margin:18px 0 4px; font-size:22px; letter-spacing:.2px; text-shadow:0 1px 0 rgba(255,255,255,.25);} 
+.telugu{font-weight:800; color:white; margin:18px 0 4px; font-size:22px; letter-spacing:.2px; text-shadow:0 1px 0 rgba(255,255,255,.25);} 
 .kss-welcome{margin:2px 0 6px; font-size:20px; color:#b2451c; font-weight:700; letter-spacing:.2px}
 .kss-sub{max-width:740px; color:#3d2b19; opacity:.9}
 .kss-cta-row{display:flex; gap:12px; margin-top:16px}
@@ -311,4 +382,7 @@ body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,
 /* Generic */ .kss-generic h2{color:#b6471c} .kss-generic p{max-width:720px; color:#3c2b17}
 /* responsive */ @media (max-width: 980px){ .kss-cards{grid-template-columns:1fr} .about-cards{grid-template-columns:1fr} .kss-sidebar{width:176px} }
 @media (max-width: 700px){ .kss-app{flex-direction:column} .kss-sidebar{width:100%; border-right:none; border-bottom:1px solid #f0e2c9} .kss-nav{flex-direction:row; flex-wrap:wrap} .kss-form-grid{grid-template-columns:1fr} .contact-grid{grid-template-columns:1fr} }
-`;
+`
+
+
+;
