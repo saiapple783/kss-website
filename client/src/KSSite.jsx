@@ -173,7 +173,7 @@ function Event() {
         <img className="event-img" src="/images/picnic.png" alt="2025 Vanabhojanalu" />
         <div className="event-meta">
           <div className="event-title">2025 Vanabhojanalu</div>
-          <div className="event-info">Oct 12</div>
+          <div className="event-info"><small>Oct 12<sup>th</sup></small></div>
           <div className="event-sub">Click to Register</div>
         </div>
       </div>
