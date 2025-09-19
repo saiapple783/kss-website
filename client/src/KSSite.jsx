@@ -578,19 +578,40 @@ const globalCSS = `
 
 
 /* One-card event layout */
-.kss-event{ max-width:980px; margin:0 auto; }
+.kss-event{ max-width:980px; margin:0 auto; padding:0 12px; }
 .event-card{
-  margin: 0 auto;
-  width:500px; background:#fff; border-radius:12px; overflow:hidden;
-  box-shadow:0 10px 24px rgba(0,0,0,.12); cursor:pointer;
+  margin:12px auto;
+  width:100%;
+  max-width:640px;          /* desktop cap */
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 10px 24px rgba(0,0,0,.12);
+  cursor:pointer;
   transition:transform .12s ease, box-shadow .2s ease;
 }
 .event-card:hover{ transform:translateY(-2px); box-shadow:0 14px 30px rgba(0,0,0,.16); }
 .event-card.disabled{ opacity:.6; cursor:not-allowed; }
-.event-img{ display:block; width:100%; height:auto; }
+
+.event-img{
+  display:block;
+  width:100%;
+  height:auto;              /* keeps your banner’s aspect ratio */
+  object-fit:cover;         /* safe if you later set a fixed height */
+}
+
 .event-meta{ padding:10px 12px; text-align:center; }
 .event-title{ font-weight:800; color:#1d2b20; }
-.event-sub{ color:##000000; font-size:13px; }
+.event-sub{ color:#000; font-size:13px; }
+
+/* Make sure nothing can push the page sideways on mobile */
+.kss-main{ flex:1; background:linear-gradient(180deg,#f7c14a 0%, #e68a1d 65%, #d96e12 100%); overflow-x:hidden; }
+
+/* Optional: slightly tighter layout on small phones */
+@media (max-width: 420px){
+  .event-meta{ padding:8px 10px; }
+  .event-title{ font-size:18px; }
+}
 
 /* Quantity modal */
 .qty-backdrop{
