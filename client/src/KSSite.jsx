@@ -4,7 +4,7 @@ const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_dRm7sL2CD0Jj8as2eugbm00
 const NAV_ITEMS = [
   { key: "home", label: "Home" },
   { key: "about", label: "About US" },
-  { key: "register", label: "Register" },
+  // { key: "register", label: "Register" },
   { key: "donate", label: "Donate" },
   { key: "contact", label: "Contact" },
   { key: "event", label: "Event" },
@@ -39,7 +39,7 @@ export default function KammaSevaSamithiSite() {
       <main className="kss-main">
         {active === "home" && <Home onNav={setActive} />}
         {active === "about" && <About />}
-        {active === "register" && <Register />}
+        {/* {active === "register" && <Register />} */}
         {active === "donate" && <Donate />}
         {active === "contact" && <Contact />}
         {active === "event" && <Event />}
@@ -105,10 +105,58 @@ function Home({ onNav }) {
 }
 
 function Event() {
-  const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_dRm7sL2CD0Jj8as2eugbm00"; // your link
+  const STRIPE_SINGLE = "https://buy.stripe.com/test_dRm7sL2CD0Jj8as2eugbm00";
+  const STRIPE_FAMILY = "https://buy.stripe.com/test_3cIfZh7WX0JjgGY3iygbm01";
 
-  const goToStripe = () => {
-    window.location = STRIPE_PAYMENT_LINK;
+  const [open, setOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [form, setForm] = React.useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    type: "single",
+    adults: 0,
+    kids: 0,
+  });
+  const [err, setErr] = React.useState("");
+
+  const onCardClick = () => setOpen(true);
+  const close = () => { if (!loading) setOpen(false); };
+  const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  const submit = async () => {
+    setErr("");
+    const { firstName, lastName, phone, type } = form;
+    if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
+      setErr("Please fill all required fields.");
+      return;
+    }
+    if (type === "family" && Number(form.adults || 0) + Number(form.kids || 0) <= 0) {
+      setErr("For Family, set Adults or Kids > 0.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/vanabhojanalu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          phone: form.phone,
+          type: form.type,
+          adults: Number(form.adults || 0),
+          kids: Number(form.kids || 0),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || "Cannot submit");
+
+      window.location = form.type === "family" ? STRIPE_FAMILY : STRIPE_SINGLE;
+    } catch (e) {
+      setErr(e.message || "Server error");
+      setLoading(false);
+    }
   };
 
   return (
@@ -117,20 +165,70 @@ function Event() {
 
       <div
         className="event-card"
-        onClick={goToStripe}
+        onClick={onCardClick}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && goToStripe()}
-        aria-label="Register for 2025 Picnic"
-        title="Click to register & pay ($20 per ticket — choose quantity on Stripe)"
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onCardClick()}
       >
-        <img className="event-img" src="/images/picnic.png" alt="2025 Picnic" />
+        <img className="event-img" src="/images/picnic.png" alt="2025 Vanabhojanalu" />
         <div className="event-meta">
           <div className="event-title">2025 Vanabhojanalu</div>
-          <div className="event-info">Sep 12,2025 (11AM-6PM)</div>
-          <div className="event-sub">Click to Register & Pay ($20 per ticket)</div>
+          <div className="event-sub">Click to Register</div>
         </div>
       </div>
+
+      {open && (
+        <div className="reg-backdrop" onClick={close}>
+          <div className="reg-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="reg-title">2025 Vanabhojanalu Registration</div>
+
+            <div className="kss-form-grid" style={{ marginTop: 8 }}>
+              <div className="kss-field">
+                <label className="kss-label">First Name <span className="req">*</span></label>
+                <input className="kss-input" name="firstName" value={form.firstName} onChange={onChange} />
+              </div>
+              <div className="kss-field">
+                <label className="kss-label">Last Name <span className="req">*</span></label>
+                <input className="kss-input" name="lastName" value={form.lastName} onChange={onChange} />
+              </div>
+              <div className="kss-field">
+                <label className="kss-label">Phone Number <span className="req">*</span></label>
+                <input className="kss-input" name="phone" value={form.phone} onChange={onChange} />
+              </div>
+
+              <div className="kss-field">
+                <label className="kss-label">Type <span className="req">*</span></label>
+                <div className="reg-choice">
+                  <button type="button" className={"chip " + (form.type === "single" ? "active" : "")} onClick={() => setForm((f) => ({ ...f, type: "single" }))}>Single</button>
+                  <button type="button" className={"chip " + (form.type === "family" ? "active" : "")} onClick={() => setForm((f) => ({ ...f, type: "family" }))}>Family</button>
+                </div>
+              </div>
+
+              {form.type === "family" && (
+                <>
+                  <div className="kss-field">
+                    <label className="kss-label">Adults</label>
+                    <input className="kss-input" type="number" min="0" name="adults" value={form.adults} onChange={onChange} />
+                  </div>
+                  <div className="kss-field">
+                    <label className="kss-label">Kids</label>
+                    <input className="kss-input" type="number" min="0" name="kids" value={form.kids} onChange={onChange} />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {err && <div className="kss-alert err" style={{ marginTop: 6 }}>{err}</div>}
+
+            <div className="reg-actions">
+              <button className="btn ghost" onClick={close} disabled={loading}>Cancel</button>
+              <button className="btn primary" onClick={submit} disabled={loading}>
+                {loading ? "Saving..." : "Continue to Payment"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -286,6 +384,16 @@ function Donate() { return (<div className="kss-generic"><h2>Donate</h2><p>Your 
 function Placeholder({ title }){ return (<div className="kss-generic"><h2>{title}</h2><p>Coming soon.</p></div>); }
 
 const globalCSS = `
+
+/* Registration modal */
+.reg-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; z-index:60; }
+.reg-modal{ width:min(520px,92vw); background:#fff; border-radius:16px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+.reg-title{ font-weight:800; color:#1d2b20; margin-bottom:8px; }
+.reg-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
+.reg-choice{ display:flex; gap:8px; }
+.chip{ padding:10px 16px; border-radius:9999px; border:1px solid #eee2cf; background:#faf7f0; cursor:pointer; font-weight:700; }
+.chip.active{ background:#ffe5d7; border-color:#f0b877; color:#7b3a22; }
+
 /* One-card event layout */
 .kss-event{ max-width:980px; margin:0 auto; }
 .event-card{
