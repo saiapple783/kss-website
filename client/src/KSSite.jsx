@@ -3,12 +3,12 @@ import React, { useState } from "react";
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_dRm7sL2CD0Jj8as2eugbm00";
 const NAV_ITEMS = [
   { key: "home", label: "Home" },
-  { key: "about", label: "About US" },
+  { key: "event", label: "2025 Vanabhojanalu Registration" },
   // { key: "register", label: "Register" },
   { key: "donate", label: "Donate" },
   { key: "contact", label: "Contact" },
-  { key: "event", label: "Event" },
   { key: "gallery", label: "Gallery" },
+  { key: "about", label: "About US" },
 ];
 
 export default function KammaSevaSamithiSite() {
@@ -173,6 +173,7 @@ function Event() {
         <img className="event-img" src="/images/picnic.png" alt="2025 Vanabhojanalu" />
         <div className="event-meta">
           <div className="event-title">2025 Vanabhojanalu</div>
+          <div className="event-info">Oct 12</div>
           <div className="event-sub">Click to Register</div>
         </div>
       </div>
@@ -197,7 +198,7 @@ function Event() {
               </div>
 
               <div className="kss-field">
-                <label className="kss-label">Type <span className="req">*</span></label>
+                <label className="kss-label">You are <span className="req">*</span></label>
                 <div className="reg-choice">
                   <button type="button" className={"chip " + (form.type === "single" ? "active" : "")} onClick={() => setForm((f) => ({ ...f, type: "single" }))}>Single</button>
                   <button type="button" className={"chip " + (form.type === "family" ? "active" : "")} onClick={() => setForm((f) => ({ ...f, type: "family" }))}>Family</button>
@@ -232,6 +233,7 @@ function Event() {
     </div>
   );
 }
+
 
 
 
