@@ -225,11 +225,11 @@ function Event() {
         tabIndex={0}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onCardClick()}
       >
-        <img className="event-img" src="/images/picnic.png" alt="2025 Vanabhojanalu" />
+        <img className="event-img" src="/images/ntrbanner.jpeg" alt="2025 Vanabhojanalu" />
         <div className="event-meta">
           <div className="event-title">2025 Vanabhojanalu</div>
-          <div className="event-info">Oct 12</div>
-          <div className="event-sub">Click to Register</div>
+          <div className="event-info">Oct 12<sup>th</sup>,2025</div>
+          <div className="event-sub"><b>Click to Register</b></div>
         </div>
       </div>
 
@@ -352,7 +352,7 @@ function Event() {
             <div className="reg-actions">
               <button className="btn ghost" onClick={close} disabled={loading}>Cancel</button>
               <button className="btn primary" onClick={submit} disabled={loading || !agree}>
-                {loading ? "Saving..." : "Continue to Payment"}
+                {loading ? "Saving..." : "Continue to Donation"}
               </button>
             </div>
           </div>
@@ -581,7 +581,7 @@ const globalCSS = `
 .kss-event{ max-width:980px; margin:0 auto; }
 .event-card{
   margin: 0 auto;
-  width:333px; background:#fff; border-radius:12px; overflow:hidden;
+  width:500px; background:#fff; border-radius:12px; overflow:hidden;
   box-shadow:0 10px 24px rgba(0,0,0,.12); cursor:pointer;
   transition:transform .12s ease, box-shadow .2s ease;
 }
@@ -590,7 +590,7 @@ const globalCSS = `
 .event-img{ display:block; width:100%; height:auto; }
 .event-meta{ padding:10px 12px; text-align:center; }
 .event-title{ font-weight:800; color:#1d2b20; }
-.event-sub{ color:#6b5b44; font-size:13px; }
+.event-sub{ color:##000000; font-size:13px; }
 
 /* Quantity modal */
 .qty-backdrop{
