@@ -43,11 +43,27 @@ export default function KammaSevaSamithiSite() {
         {active === "donate" && <Donate />}
         {active === "contact" && <Contact />}
         {active === "event" && <Event />}
-        {active === "gallery" && <Placeholder title="Gallery" />}
+        {active === "gallery" && <Gallery />}
       </main>
     </div>
   );
 }
+
+
+function Gallery() {
+  const EMBED_HTML = `<iframe
+    src="https://eliteliveproductions.smugmug.com/frame/slideshow?key=Nz43xR&speed=3&transition=fade&autoStart=1&captions=0&navigation=0&playButton=0&randomize=0&transitionSpeed=2"
+    frameborder="0" scrolling="no" allow="fullscreen" allowfullscreen
+  ></iframe>`;
+
+  return (
+    <div className="gallery-embed">
+      <div className="embed-box" dangerouslySetInnerHTML={{ __html: EMBED_HTML }} />
+    </div>
+  );
+}
+
+
 
 function Home({ onNav }) {
   return (
@@ -110,6 +126,7 @@ function Event() {
 
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [agree, setAgree] = React.useState(false);
   const [form, setForm] = React.useState({
     firstName: "",
     lastName: "",
@@ -122,28 +139,66 @@ function Event() {
 
   const onCardClick = () => setOpen(true);
   const close = () => { if (!loading) setOpen(false); };
-  const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  // sanitize inputs as user types
+  const onChange = (e) => {
+    let { name, value } = e.target;
+
+    if (name === "firstName" || name === "lastName") {
+      // letters, spaces, hyphens, apostrophes (no digits/symbols)
+      value = value.replace(/[^A-Za-z\s'-]/g, "");
+    }
+
+    if (name === "phone") {
+      // digits only, cap to 15
+      value = value.replace(/\D/g, "").slice(0, 15);
+    }
+
+    if (name === "adults" || name === "kids") {
+      const n = parseInt(value || "0", 10);
+      value = String(Number.isFinite(n) && n > 0 ? n : 0);
+    }
+
+    setForm((f) => ({ ...f, [name]: value }));
+  };
 
   const submit = async () => {
     setErr("");
     const { firstName, lastName, phone, type } = form;
+
     if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
       setErr("Please fill all required fields.");
       return;
     }
+    // re-validate with same rules
+    if (/[^A-Za-z\s'-]/.test(firstName) || /[^A-Za-z\s'-]/.test(lastName)) {
+      setErr("Names can only contain letters, spaces, hyphens, and apostrophes.");
+      return;
+    }
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (phoneDigits.length < 10) {
+      setErr("Enter a valid phone number (10+ digits).");
+      return;
+    }
+
     if (type === "family" && Number(form.adults || 0) + Number(form.kids || 0) <= 0) {
       setErr("For Family, set Adults or Kids > 0.");
       return;
     }
+    if (!agree) {
+      setErr("Please accept the Terms & Conditions to continue.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/vanabhojanalu", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          firstName: form.firstName,
-          lastName: form.lastName,
-          phone: form.phone,
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          phone: phoneDigits, // send normalized digits
           type: form.type,
           adults: Number(form.adults || 0),
           kids: Number(form.kids || 0),
@@ -173,7 +228,7 @@ function Event() {
         <img className="event-img" src="/images/picnic.png" alt="2025 Vanabhojanalu" />
         <div className="event-meta">
           <div className="event-title">2025 Vanabhojanalu</div>
-          <div className="event-info"><small>Oct 12<sup>th</sup></small></div>
+          <div className="event-info">Oct 12</div>
           <div className="event-sub">Click to Register</div>
         </div>
       </div>
@@ -186,22 +241,57 @@ function Event() {
             <div className="kss-form-grid" style={{ marginTop: 8 }}>
               <div className="kss-field">
                 <label className="kss-label">First Name <span className="req">*</span></label>
-                <input className="kss-input" name="firstName" value={form.firstName} onChange={onChange} />
+                <input
+                  className="kss-input"
+                  name="firstName"
+                  value={form.firstName}
+                  onChange={onChange}
+                  inputMode="text"
+                  autoComplete="given-name"
+                />
               </div>
               <div className="kss-field">
                 <label className="kss-label">Last Name <span className="req">*</span></label>
-                <input className="kss-input" name="lastName" value={form.lastName} onChange={onChange} />
+                <input
+                  className="kss-input"
+                  name="lastName"
+                  value={form.lastName}
+                  onChange={onChange}
+                  inputMode="text"
+                  autoComplete="family-name"
+                />
               </div>
               <div className="kss-field">
                 <label className="kss-label">Phone Number <span className="req">*</span></label>
-                <input className="kss-input" name="phone" value={form.phone} onChange={onChange} />
+                <input
+                  className="kss-input"
+                  name="phone"
+                  value={form.phone}
+                  onChange={onChange}
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="e.g., 2145551234"
+                />
               </div>
 
               <div className="kss-field">
                 <label className="kss-label">You are <span className="req">*</span></label>
                 <div className="reg-choice">
-                  <button type="button" className={"chip " + (form.type === "single" ? "active" : "")} onClick={() => setForm((f) => ({ ...f, type: "single" }))}>Single</button>
-                  <button type="button" className={"chip " + (form.type === "family" ? "active" : "")} onClick={() => setForm((f) => ({ ...f, type: "family" }))}>Family</button>
+                  <button
+                    type="button"
+                    className={"chip " + (form.type === "single" ? "active" : "")}
+                    onClick={() => setForm((f) => ({ ...f, type: "single" }))}
+                  >
+                    Single
+                  </button>
+                  <button
+                    type="button"
+                    className={"chip " + (form.type === "family" ? "active" : "")}
+                    onClick={() => setForm((f) => ({ ...f, type: "family" }))}
+                  >
+                    Family
+                  </button>
                 </div>
               </div>
 
@@ -209,21 +299,59 @@ function Event() {
                 <>
                   <div className="kss-field">
                     <label className="kss-label">Adults</label>
-                    <input className="kss-input" type="number" min="0" name="adults" value={form.adults} onChange={onChange} />
+                    <input
+                      className="kss-input"
+                      type="number"
+                      min="0"
+                      name="adults"
+                      value={form.adults}
+                      onChange={onChange}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                    />
                   </div>
                   <div className="kss-field">
                     <label className="kss-label">Kids</label>
-                    <input className="kss-input" type="number" min="0" name="kids" value={form.kids} onChange={onChange} />
+                    <input
+                      className="kss-input"
+                      type="number"
+                      min="0"
+                      name="kids"
+                      value={form.kids}
+                      onChange={onChange}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                    />
                   </div>
                 </>
               )}
+            </div>
+
+            {/* Terms & Conditions (unchanged) */}
+            <div className="terms-wrap">
+              <div className="terms-title">Terms & Conditions</div>
+              <div className="terms-box" role="region" aria-label="Terms and Conditions">
+                <p>డల్లాస్ మరియు పరిసర ప్రాంతాల కమ్మ కమ్యూనిటీ కుటుంబ సభ్యులందరికీ కమ్మ సేవా సమితి ఆధ్వర్యంలో నిర్వహించబడుతున్న వనభోజన కార్యక్రమానికి స్వాగతం... సుస్వాగతం!!!</p>
+                <p>You are warmly invited to the Kamma Seva Samithi Vanabhojanalu, organized by Kamma Seva Samithi on Sunday, October 12, 2025, from 11 AM to 6 PM at 4320 Co Rd 570, Farmersville, TX 75442. Join us for a day filled with cultural celebrations, authentic Telugu cuisine, games, and entertainment for the Kamma community. Kamma Seva Samithi (501(c)(3) Non-Profit), a non-profit and non-political organization, is dedicated to the service and development of the Kamma community.</p>
+                <p>Please be aware that foods at the event may contain allergens. Attendees are responsible for inquiring about ingredients and consuming at their own risk. Alcohol, fireworks, and political displays are not allowed. Attendees are responsible for their own belongings, the organizers are not liable for any loss or damage. Disruptive behavior will result in removal from the event. The organizing committee reserves the right to make modifications without prior notice.</p>
+                <p>We are not liable for injuries, illnesses, or damages unless directly caused by our negligence. This includes emotional distress not stemming from physical harm. Our liability does not cover indirect, incidental, or punitive damages. By attending, you agree to these terms and accept all associated risks. Failure to comply may result in removal without liability. Thank you for your Support.</p>
+              </div>
+
+              <label className="agree-row">
+                <input
+                  type="checkbox"
+                  checked={agree}
+                  onChange={(e) => setAgree(e.target.checked)}
+                />
+                <span>I have read and agree to the Terms & Conditions.</span>
+              </label>
             </div>
 
             {err && <div className="kss-alert err" style={{ marginTop: 6 }}>{err}</div>}
 
             <div className="reg-actions">
               <button className="btn ghost" onClick={close} disabled={loading}>Cancel</button>
-              <button className="btn primary" onClick={submit} disabled={loading}>
+              <button className="btn primary" onClick={submit} disabled={loading || !agree}>
                 {loading ? "Saving..." : "Continue to Payment"}
               </button>
             </div>
@@ -395,10 +523,64 @@ const globalCSS = `
 .reg-choice{ display:flex; gap:8px; }
 .chip{ padding:10px 16px; border-radius:9999px; border:1px solid #eee2cf; background:#faf7f0; cursor:pointer; font-weight:700; }
 .chip.active{ background:#ffe5d7; border-color:#f0b877; color:#7b3a22; }
+.terms-wrap{ margin-top:12px }
+.terms-title{ font-weight:800; color:#3c2b17; margin-bottom:6px }
+.terms-box{
+  max-height: 160px;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #eee2cf;
+  border-radius: 8px;
+  background: #faf7f0;
+  color:#3c2b17;
+  line-height:1.4;
+}
+.agree-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+  font-weight:700;
+  color:#3c2b17;
+}
+.agree-row input{ width:18px; height:18px; }
+
+
+/* Gallery */
+.gallery-embed{ max-width:2000px; margin:0 auto; padding:24px }
+.embed-box{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;          /* desktop: widescreen */
+  border-radius:14px;
+  overflow:hidden;
+  background:#000;
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+}
+.embed-box iframe{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  border:0; display:block;
+}
+
+/* Phones: make it taller so images aren’t cramped */
+@media (max-width: 640px){
+  .gallery-embed{ padding:12px }
+  .embed-box{ aspect-ratio:4/5; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,.14) }
+}
+
+/* Small tablets: a bit wider than phone, still taller than 16:9 */
+@media (min-width: 641px) and (max-width: 900px){
+  .gallery-embed{ padding:16px }
+  .embed-box{ aspect-ratio:4/3 }
+}
+
+
 
 /* One-card event layout */
 .kss-event{ max-width:980px; margin:0 auto; }
 .event-card{
+  margin: 0 auto;
   width:333px; background:#fff; border-radius:12px; overflow:hidden;
   box-shadow:0 10px 24px rgba(0,0,0,.12); cursor:pointer;
   transition:transform .12s ease, box-shadow .2s ease;
@@ -428,10 +610,10 @@ const globalCSS = `
 
 /* keep site-wide CTAs bigger + rounded like home */
 .btn, .btn.primary,  .kss-submit, .send-btn{
-  border-radius:9999px; padding:14px 24px; font-size:16px; font-weight:700;background-color:red;
+  border-radius:9999px; padding:14px 24px; font-size:16px; font-weight:700;background-color: #F54800;
 }
 
-.btn.ghost, .btn.outline{border-radius:9999px; padding:14px 24px; font-size:16px; font-weight:700;background-color:white}
+.btn.ghost, .btn.outline{border-radius:9999px; padding:14px 24px; font-size:16px; font-weight:700;background-color:white; border-block-color: red}
 
 :root{ --sidebar-bg:#FFF6E6; --accent:#E6602E; --accent-700:#C94919; --text:#2B2B2B; --card-bg:#FFFFFF; --shadow:0 8px 24px rgba(0,0,0,.08); }
 *{box-sizing:border-box} html,body,#root{height:100%}
@@ -464,9 +646,9 @@ body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,
 /* about cards */ .about-cards{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:28px; margin-top:22px}
 .about-card{text-align:center}
 .about-img{width:100%; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.18)}
-.about-title{margin-top:10px; font-weight:800; color:#c25322}
+.about-title{margin-top:10px; font-weight:800; color:#c25322; }
 .about-desc{color:#3c2b17; max-width:320px; margin:6px auto 0}
-/* shared form */ .kss-form-title{color:#b6471c; margin: 6px 0 16px; font-weight:700}
+/* shared form */ .kss-form-title{color:#b6471c; margin: 6px 0 16px; font-weight:700;    text-align: center;}
 .kss-form-card{background:#fff; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.12); padding:22px; border:1px solid #f1e5cf}
 .kss-form-grid{display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:16px 20px; margin-bottom:10px}
 .kss-section-sub{color:#94641a; font-weight:700; margin:10px 0}
