@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_dRm7sL2CD0Jj8as2eugbm00";
 const NAV_ITEMS = [
   { key: "home", label: "Home" },
   { key: "event", label: "2025 Vanabhojanalu Registration" },
-  // { key: "register", label: "Register" },
   { key: "donate", label: "Donate" },
   { key: "contact", label: "Contact" },
   { key: "gallery", label: "Gallery" },
@@ -39,31 +37,16 @@ export default function KammaSevaSamithiSite() {
       <main className="kss-main">
         {active === "home" && <Home onNav={setActive} />}
         {active === "about" && <About />}
-        {/* {active === "register" && <Register />} */}
         {active === "donate" && <Donate />}
         {active === "contact" && <Contact />}
         {active === "event" && <Event />}
-        {active === "gallery" && <Gallery />}
+        {active === "gallery" && <Placeholder title="Gallery" />}
       </main>
     </div>
   );
 }
 
-
-function Gallery() {
-  const EMBED_HTML = `<iframe
-    src="https://eliteliveproductions.smugmug.com/frame/slideshow?key=Nz43xR&speed=3&transition=fade&autoStart=1&captions=0&navigation=0&playButton=0&randomize=0&transitionSpeed=2"
-    frameborder="0" scrolling="no" allow="fullscreen" allowfullscreen
-  ></iframe>`;
-
-  return (
-    <div className="gallery-embed">
-      <div className="embed-box" dangerouslySetInnerHTML={{ __html: EMBED_HTML }} />
-    </div>
-  );
-}
-
-
+/* ---------------- Home ---------------- */
 
 function Home({ onNav }) {
   return (
@@ -88,7 +71,7 @@ function Home({ onNav }) {
         </p>
 
         <div className="kss-cta-row">
-          <button className="btn primary" onClick={() => onNav("register")}>Register</button>
+          <button className="btn primary" onClick={() => onNav("event")}>Register</button>
           <button className="btn ghost" onClick={() => onNav("contact")}>Contact</button>
         </div>
       </div>
@@ -120,75 +103,46 @@ function Home({ onNav }) {
   );
 }
 
+/* ---------------- Event (with modal) ---------------- */
+
 function Event() {
   const STRIPE_SINGLE = "https://buy.stripe.com/test_dRm7sL2CD0Jj8as2eugbm00";
   const STRIPE_FAMILY = "https://buy.stripe.com/test_3cIfZh7WX0JjgGY3iygbm01";
 
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const [agree, setAgree] = React.useState(false);
   const [form, setForm] = React.useState({
     firstName: "",
     lastName: "",
+    email: "",
     phone: "",
     type: "single",
     adults: 0,
     kids: 0,
   });
+  const [agree, setAgree] = React.useState(false);
   const [err, setErr] = React.useState("");
+
+  const NUM_OPTS = React.useMemo(() => Array.from({ length: 31 }, (_, i) => i), []);
 
   const onCardClick = () => setOpen(true);
   const close = () => { if (!loading) setOpen(false); };
-
-  // sanitize inputs as user types
-  const onChange = (e) => {
-    let { name, value } = e.target;
-
-    if (name === "firstName" || name === "lastName") {
-      // letters, spaces, hyphens, apostrophes (no digits/symbols)
-      value = value.replace(/[^A-Za-z\s'-]/g, "");
-    }
-
-    if (name === "phone") {
-      // digits only, cap to 15
-      value = value.replace(/\D/g, "").slice(0, 15);
-    }
-
-    if (name === "adults" || name === "kids") {
-      const n = parseInt(value || "0", 10);
-      value = String(Number.isFinite(n) && n > 0 ? n : 0);
-    }
-
-    setForm((f) => ({ ...f, [name]: value }));
-  };
+  const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const submit = async () => {
     setErr("");
-    const { firstName, lastName, phone, type } = form;
+    const { firstName, lastName, email, phone, type } = form;
 
-    if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
-      setErr("Please fill all required fields.");
-      return;
-    }
-    // re-validate with same rules
-    if (/[^A-Za-z\s'-]/.test(firstName) || /[^A-Za-z\s'-]/.test(lastName)) {
-      setErr("Names can only contain letters, spaces, hyphens, and apostrophes.");
-      return;
-    }
-    const phoneDigits = phone.replace(/\D/g, "");
-    if (phoneDigits.length < 10) {
-      setErr("Enter a valid phone number (10+ digits).");
-      return;
-    }
-
+    // validation
+    if (!firstName.trim().match(/^[A-Za-z][A-Za-z\s'-]*$/)) { setErr("Enter a valid First Name (letters only)."); return; }
+    if (!lastName.trim().match(/^[A-Za-z][A-Za-z\s'-]*$/)) { setErr("Enter a valid Last Name (letters only)."); return; }
+    if (!email.trim().match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { setErr("Enter a valid Email."); return; }
+    if (!phone.trim().match(/^\d{10,15}$/)) { setErr("Phone Number should be digits only (10–15)."); return; }
     if (type === "family" && Number(form.adults || 0) + Number(form.kids || 0) <= 0) {
       setErr("For Family, set Adults or Kids > 0.");
       return;
     }
-    if (!agree) {
-      setErr("Please accept the Terms & Conditions to continue.");
-      return;
-    }
+    if (!agree) { setErr("Please agree to the Terms & Conditions."); return; }
 
     setLoading(true);
     try {
@@ -198,7 +152,8 @@ function Event() {
         body: JSON.stringify({
           firstName: form.firstName.trim(),
           lastName: form.lastName.trim(),
-          phone: phoneDigits, // send normalized digits
+          email: form.email.trim(),
+          phone: form.phone.trim(),
           type: form.type,
           adults: Number(form.adults || 0),
           kids: Number(form.kids || 0),
@@ -228,8 +183,8 @@ function Event() {
         <img className="event-img" src="/images/ntrbanner.jpeg" alt="2025 Vanabhojanalu" />
         <div className="event-meta">
           <div className="event-title">2025 Vanabhojanalu</div>
-          <div className="event-info">Oct 12<sup>th</sup>,2025</div>
-          <div className="event-sub"><b>Click to Register</b></div>
+          <div className="event-info">Oct 12<sup>th</sup>, 2025</div>
+          <div className="event-sub">Click to Register</div>
         </div>
       </div>
 
@@ -239,59 +194,16 @@ function Event() {
             <div className="reg-title">2025 Vanabhojanalu Registration</div>
 
             <div className="kss-form-grid" style={{ marginTop: 8 }}>
-              <div className="kss-field">
-                <label className="kss-label">First Name <span className="req">*</span></label>
-                <input
-                  className="kss-input"
-                  name="firstName"
-                  value={form.firstName}
-                  onChange={onChange}
-                  inputMode="text"
-                  autoComplete="given-name"
-                />
-              </div>
-              <div className="kss-field">
-                <label className="kss-label">Last Name <span className="req">*</span></label>
-                <input
-                  className="kss-input"
-                  name="lastName"
-                  value={form.lastName}
-                  onChange={onChange}
-                  inputMode="text"
-                  autoComplete="family-name"
-                />
-              </div>
-              <div className="kss-field">
-                <label className="kss-label">Phone Number <span className="req">*</span></label>
-                <input
-                  className="kss-input"
-                  name="phone"
-                  value={form.phone}
-                  onChange={onChange}
-                  type="tel"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  placeholder="e.g., 2145551234"
-                />
-              </div>
+              <Field label="First Name" required name="firstName" value={form.firstName} onChange={onChange} />
+              <Field label="Last Name" required name="lastName" value={form.lastName} onChange={onChange} />
+              <Field label="Email" required type="email" placeholder="e.g., you@example.com" name="email" value={form.email} onChange={onChange} />
+              <Field label="Phone Number" required placeholder="e.g., 2145551234" name="phone" value={form.phone} onChange={onChange} />
 
               <div className="kss-field">
                 <label className="kss-label">You are <span className="req">*</span></label>
                 <div className="reg-choice">
-                  <button
-                    type="button"
-                    className={"chip " + (form.type === "single" ? "active" : "")}
-                    onClick={() => setForm((f) => ({ ...f, type: "single" }))}
-                  >
-                    Single
-                  </button>
-                  <button
-                    type="button"
-                    className={"chip " + (form.type === "family" ? "active" : "")}
-                    onClick={() => setForm((f) => ({ ...f, type: "family" }))}
-                  >
-                    Family
-                  </button>
+                  <button type="button" className={"chip " + (form.type === "single" ? "active" : "")} onClick={() => setForm((f) => ({ ...f, type: "single" }))}>Single</button>
+                  <button type="button" className={"chip " + (form.type === "family" ? "active" : "")} onClick={() => setForm((f) => ({ ...f, type: "family" }))}>Family</button>
                 </div>
               </div>
 
@@ -299,51 +211,46 @@ function Event() {
                 <>
                   <div className="kss-field">
                     <label className="kss-label">Adults</label>
-                    <input
+                    <select
                       className="kss-input"
-                      type="number"
-                      min="0"
                       name="adults"
                       value={form.adults}
                       onChange={onChange}
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                    />
+                    >
+                      {NUM_OPTS.map((n) => (
+                        <option key={`ad-${n}`} value={n}>{n}</option>
+                      ))}
+                    </select>
                   </div>
+
                   <div className="kss-field">
                     <label className="kss-label">Kids</label>
-                    <input
+                    <select
                       className="kss-input"
-                      type="number"
-                      min="0"
                       name="kids"
                       value={form.kids}
                       onChange={onChange}
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                    />
+                    >
+                      {NUM_OPTS.map((n) => (
+                        <option key={`kid-${n}`} value={n}>{n}</option>
+                      ))}
+                    </select>
                   </div>
                 </>
               )}
             </div>
 
-            {/* Terms & Conditions (unchanged) */}
-            <div className="terms-wrap">
+            <div className="terms">
               <div className="terms-title">Terms & Conditions</div>
-              <div className="terms-box" role="region" aria-label="Terms and Conditions">
-                <p>డల్లాస్ మరియు పరిసర ప్రాంతాల కమ్మ కమ్యూనిటీ కుటుంబ సభ్యులందరికీ కమ్మ సేవా సమితి ఆధ్వర్యంలో నిర్వహించబడుతున్న వనభోజన కార్యక్రమానికి స్వాగతం... సుస్వాగతం!!!</p>
-                <p>You are warmly invited to the Kamma Seva Samithi Vanabhojanalu, organized by Kamma Seva Samithi on Sunday, October 12, 2025, from 11 AM to 6 PM at 4320 Co Rd 570, Farmersville, TX 75442. Join us for a day filled with cultural celebrations, authentic Telugu cuisine, games, and entertainment for the Kamma community. Kamma Seva Samithi (501(c)(3) Non-Profit), a non-profit and non-political organization, is dedicated to the service and development of the Kamma community.</p>
-                <p>Please be aware that foods at the event may contain allergens. Attendees are responsible for inquiring about ingredients and consuming at their own risk. Alcohol, fireworks, and political displays are not allowed. Attendees are responsible for their own belongings, the organizers are not liable for any loss or damage. Disruptive behavior will result in removal from the event. The organizing committee reserves the right to make modifications without prior notice.</p>
-                <p>We are not liable for injuries, illnesses, or damages unless directly caused by our negligence. This includes emotional distress not stemming from physical harm. Our liability does not cover indirect, incidental, or punitive damages. By attending, you agree to these terms and accept all associated risks. Failure to comply may result in removal without liability. Thank you for your Support.</p>
-              </div>
-
-              <label className="agree-row">
-                <input
-                  type="checkbox"
-                  checked={agree}
-                  onChange={(e) => setAgree(e.target.checked)}
-                />
-                <span>I have read and agree to the Terms & Conditions.</span>
+              <textarea
+                className="kss-input kss-textarea"
+                rows={5}
+                readOnly
+                value={`డల్లాస్ మరియు పరిసర ప్రాంతాల కమ్మ కమ్యూనిటీ కుటుంబ సభ్యులందరికీ కమ్మ సేవా సమితి ఆధ్వర్యంలో నిర్వహించబడుతున్న వనభోజన కార్యక్రమానికి స్వాగతం... సుస్వాగతం!!! You are warmly invited to the Kamma Seva Samithi Vanabhojanalu, organized by Kamma Seva Samithi on Sunday, October 12, 2025, from 11 AM to 6 PM at 4320 Co Rd 570, Farmersville, TX 75442. Join us for a day filled with cultural celebrations, authentic Telugu cuisine, games, and entertainment for the Kamma community. Kamma Seva Samithi (501(c)(3) Non-Profit), a non-profit and non-political organization, is dedicated to the service and development of the Kamma community. Please be aware that foods at the event may contain allergens. Attendees are responsible for inquiring about ingredients and consuming at their own risk. Alcohol, fireworks, and political displays are not allowed. Attendees are responsible for their own belongings, the organizers are not liable for any loss or damage. Disruptive behavior will result in removal from the event. The organizing committee reserves the right to make modifications without prior notice. We are not liable for injuries, illnesses, or damages unless directly caused by our negligence. This includes emotional distress not stemming from physical harm. Our liability does not cover indirect, incidental, or punitive damages. By attending, you agree to these terms and accept all associated risks. Failure to comply may result in removal without liability. Thank you for your Support.`}
+              />
+              <label className="agree">
+                <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />{" "}
+                I have read and agree to the Terms & Conditions.
               </label>
             </div>
 
@@ -351,8 +258,8 @@ function Event() {
 
             <div className="reg-actions">
               <button className="btn ghost" onClick={close} disabled={loading}>Cancel</button>
-              <button className="btn primary" onClick={submit} disabled={loading || !agree}>
-                {loading ? "Saving..." : "Continue to Donation"}
+              <button className="btn primary" onClick={submit} disabled={loading}>
+                {loading ? "Saving..." : "Continue to Payment"}
               </button>
             </div>
           </div>
@@ -362,8 +269,7 @@ function Event() {
   );
 }
 
-
-
+/* ---------------- Small helpers ---------------- */
 
 function InfoCard({ icon, title, desc, cta, onClick }) {
   return (
@@ -425,45 +331,6 @@ function Field({ label, required, placeholder, name, type="text", value, onChang
   );
 }
 
-function Register() {
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phoneUS: "", village: "", mandal: "", district: "" });
-  const [status, setStatus] = useState({ ok: null, msg: "" });
-  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault(); setStatus({ ok: null, msg: "" });
-    try {
-      const res = await fetch("/api/registration", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.message || "Failed to submit");
-      setStatus({ ok: true, msg: "Registration saved. Thank you!" });
-      setForm({ firstName: "", lastName: "", email: "", phoneUS: "", village: "", mandal: "", district: "" });
-    } catch (err) { setStatus({ ok: false, msg: err.message }); }
-  };
-
-  return (
-    <div className="kss-register">
-      <h2 className="kss-form-title">Member Registration</h2>
-      <form className="kss-form-card" onSubmit={handleSubmit}>
-        <div className="kss-form-grid">
-          <Field label="First Name" required placeholder="Enter your first name" name="firstName" value={form.firstName} onChange={handleChange} />
-          <Field label="Last Name" required placeholder="Enter your Lastname" name="lastName" value={form.lastName} onChange={handleChange} />
-          <Field label="Email" required type="email" placeholder="Enter your email address" name="email" value={form.email} onChange={handleChange} />
-          <Field label="US Phone Number" required placeholder="(xxx) xxx-xxx" name="phoneUS" value={form.phoneUS} onChange={handleChange} />
-        </div>
-        <div className="kss-section-sub">India Details</div>
-        <div className="kss-form-grid">
-          <Field label="Village" required placeholder="Enter your village" name="village" value={form.village} onChange={handleChange} />
-          <Field label="Mandal" required placeholder="Enter your mandal" name="mandal" value={form.mandal} onChange={handleChange} />
-          <Field label="District" required placeholder="Enter your district" name="district" value={form.district} onChange={handleChange} />
-        </div>
-        {status.msg && (<div className={"kss-alert " + (status.ok ? "ok" : "err")}>{status.msg}</div>)}
-        <button className="btn primary kss-submit" type="submit">Submit</button>
-      </form>
-    </div>
-  );
-}
-
 function Contact() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState({ ok: null, msg: "" });
@@ -513,129 +380,65 @@ function Contact() {
 function Donate() { return (<div className="kss-generic"><h2>Donate</h2><p>Your generous contributions support cultural events, community programs, and temple service activities.</p><button className="btn primary">Donate Now</button></div>); }
 function Placeholder({ title }){ return (<div className="kss-generic"><h2>{title}</h2><p>Coming soon.</p></div>); }
 
+/* ---------------- Styles ---------------- */
+
 const globalCSS = `
-
 /* Registration modal */
-.reg-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; z-index:60; }
-.reg-modal{ width:min(520px,92vw); background:#fff; border-radius:16px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+.reg-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; z-index:60; padding:16px; }
+.reg-modal{ width:min(560px,100%); max-height:90vh; overflow:auto; background:#fff; border-radius:16px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.25); }
 .reg-title{ font-weight:800; color:#1d2b20; margin-bottom:8px; }
-.reg-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
-.reg-choice{ display:flex; gap:8px; }
-.chip{ padding:10px 16px; border-radius:9999px; border:1px solid #eee2cf; background:#faf7f0; cursor:pointer; font-weight:700; }
-.chip.active{ background:#ffe5d7; border-color:#f0b877; color:#7b3a22; }
-.terms-wrap{ margin-top:12px }
-.terms-title{ font-weight:800; color:#3c2b17; margin-bottom:6px }
-.terms-box{
-  max-height: 160px;
-  overflow: auto;
-  padding: 12px;
-  border: 1px solid #eee2cf;
-  border-radius: 8px;
-  background: #faf7f0;
-  color:#3c2b17;
-  line-height:1.4;
-}
-.agree-row{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-top:10px;
-  font-weight:700;
-  color:#3c2b17;
-}
-.agree-row input{ width:18px; height:18px; }
+.reg-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap; }
+.terms{ margin-top:10px; }
+.terms-title{ font-weight:800; color:#2b1f16; margin:8px 0 6px; }
+.agree{ display:flex; align-items:center; gap:8px; margin-top:8px; font-weight:700; color:#2b1f16; }
 
-
-/* Gallery */
-.gallery-embed{ max-width:2000px; margin:0 auto; padding:24px }
-.embed-box{
-  position:relative;
-  width:100%;
-  aspect-ratio:16/9;          /* desktop: widescreen */
-  border-radius:14px;
-  overflow:hidden;
-  background:#000;
-  box-shadow:0 10px 24px rgba(0,0,0,.18);
+/* === You are: Single / Family pills === */
+.reg-choice{ display:flex; gap:12px; }
+.chip{
+  appearance:none;
+  border:1.5px solid #EFE2CB;
+  background:#FAF7F0;
+  color:#2B1F16;
+  padding:10px 18px;
+  border-radius:9999px;
+  font-weight:800;
+  letter-spacing:.2px;
+  cursor:pointer;
+  transition:all .15s ease;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.02);
 }
-.embed-box iframe{
-  position:absolute; inset:0;
-  width:100%; height:100%;
-  border:0; display:block;
+.chip:hover{ background:#FFF2E8; border-color:#F5C08B; }
+.chip:focus{ outline:none; box-shadow:0 0 0 3px rgba(243,178,122,.35); }
+.chip.active{
+  background:#FDE6D7;
+  border-color:#F3B27A;
+  color:#7B3A22;
+  box-shadow:inset 0 0 0 1.5px #F3B27A, 0 1px 1px rgba(0,0,0,.04);
 }
-
-/* Phones: make it taller so images aren’t cramped */
-@media (max-width: 640px){
-  .gallery-embed{ padding:12px }
-  .embed-box{ aspect-ratio:4/5; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,.14) }
-}
-
-/* Small tablets: a bit wider than phone, still taller than 16:9 */
-@media (min-width: 641px) and (max-width: 900px){
-  .gallery-embed{ padding:16px }
-  .embed-box{ aspect-ratio:4/3 }
-}
-
-
 
 /* One-card event layout */
-.kss-event{ max-width:980px; margin:0 auto; padding:0 12px; }
+.kss-event{ max-width:980px; margin:0 auto; padding:28px 24px 60px; }
 .event-card{
-  margin:12px auto;
-  width:100%;
-  max-width:640px;          /* desktop cap */
-  background:#fff;
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:0 10px 24px rgba(0,0,0,.12);
-  cursor:pointer;
-  transition:transform .12s ease, box-shadow .2s ease;
+  width:min(720px,100%); background:#fff; border-radius:12px; overflow:hidden;
+  box-shadow:0 10px 24px rgba(0,0,0,.12); cursor:pointer;
+  transition:transform .12s ease, box-shadow .2s ease; margin:0 auto;
 }
 .event-card:hover{ transform:translateY(-2px); box-shadow:0 14px 30px rgba(0,0,0,.16); }
-.event-card.disabled{ opacity:.6; cursor:not-allowed; }
-
-.event-img{
-  display:block;
-  width:100%;
-  height:auto;              /* keeps your banner’s aspect ratio */
-  object-fit:cover;         /* safe if you later set a fixed height */
-}
-
-.event-meta{ padding:10px 12px; text-align:center; }
-.event-title{ font-weight:800; color:#1d2b20; }
-.event-sub{ color:#000; font-size:13px; }
-
-/* Make sure nothing can push the page sideways on mobile */
-.kss-main{ flex:1; background:linear-gradient(180deg,#f7c14a 0%, #e68a1d 65%, #d96e12 100%); overflow-x:hidden; }
-
-/* Optional: slightly tighter layout on small phones */
-@media (max-width: 420px){
-  .event-meta{ padding:8px 10px; }
-  .event-title{ font-size:18px; }
-}
-
-/* Quantity modal */
-.qty-backdrop{
-  position:fixed; inset:0; background:rgba(0,0,0,.35);
-  display:flex; align-items:center; justify-content:center; z-index:50;
-}
-.qty-modal{
-  width:min(420px, 92vw); background:#fff; border-radius:16px; padding:20px;
-  box-shadow:0 20px 60px rgba(0,0,0,.25);
-}
-.qty-title{ font-weight:800; color:#1d2b20; margin-bottom:8px; }
-.qty-row{ display:flex; align-items:center; gap:12px; margin:10px 0 6px; }
-.qty-row label{ min-width:150px; color:#3c2b17; font-weight:700; }
-.qty-total{ margin:8px 0 14px; color:#7b3a22; font-weight:800; }
-.qty-actions{ display:flex; gap:10px; justify-content:flex-end; }
-
+.event-img{ display:block; width:100%; height:auto; }
+.event-meta{ padding:14px 16px; text-align:left; }
+.event-title{ font-weight:800; color:#1d2b20; font-size:22px; }
+.event-info{ color:#3c2b17; margin-top:4px; }
+.event-sub{ color:#6b5b44; font-size:13px; }
 
 /* keep site-wide CTAs bigger + rounded like home */
-.btn, .btn.primary,  .kss-submit, .send-btn{
-  border-radius:9999px; padding:14px 24px; font-size:16px; font-weight:700;background-color: #F54800;
+.btn, .btn.primary, .kss-submit, .send-btn{
+  border-radius:9999px; padding:14px 24px; font-size:16px; font-weight:700;
 }
+.btn.primary{ background:#F54800; color:#fff; border:none; }
+.btn.primary:hover{ filter:brightness(.97); }
+.btn.ghost, .btn.outline{ background:#fff; border:1px solid #e8d9bf; color:#2b1f16; }
 
-.btn.ghost, .btn.outline{border-radius:9999px; padding:14px 24px; font-size:16px; font-weight:700;background-color:white; border-block-color: red}
-
+/* base theme */
 :root{ --sidebar-bg:#FFF6E6; --accent:#E6602E; --accent-700:#C94919; --text:#2B2B2B; --card-bg:#FFFFFF; --shadow:0 8px 24px rgba(0,0,0,.08); }
 *{box-sizing:border-box} html,body,#root{height:100%}
 body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,Helvetica,Arial; color:var(--text)}
@@ -650,7 +453,9 @@ body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,
 .kss-nav-item.active{background:linear-gradient(180deg,#ffd9b4,#ffc88e); color:#7b3a22; font-weight:600; box-shadow:inset 0 0 0 1px #f4b06a}
 .kss-main{flex:1; background:linear-gradient(180deg,#f7c14a 0%, #e68a1d 65%, #d96e12 100%);} 
 .kss-home,.kss-about,.kss-generic,.kss-register,.kss-contact{max-width:980px; margin:0 auto; padding:28px 24px 60px}
-/* hero */ .kss-hero{display:flex; flex-direction:column; align-items:center; text-align:center; margin-top:10px; position:relative}
+
+/* hero */
+.kss-hero{display:flex; flex-direction:column; align-items:center; text-align:center; margin-top:10px; position:relative}
 .kss-hero-imgwrap{position:relative; width:min(400px,72vw); filter:drop-shadow(0 18px 36px rgba(0,0,0,.28));}
 .kss-hero-img{width:100%; height:auto; display:block}
 .kss-hero-badge{position:absolute; left:50%; transform:translate(-50%, -54%); top:17px; width:120px; height:auto; mix-blend-mode:multiply}
@@ -659,17 +464,23 @@ body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,
 .kss-welcome{margin:2px 0 6px; font-size:20px; color:#b2451c; font-weight:700; letter-spacing:.2px}
 .kss-sub{max-width:740px; color:#3d2b19; opacity:.9}
 .kss-cta-row{display:flex; gap:12px; margin-top:16px}
-/* cards */ .kss-cards{display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:24px; margin:32px 0}
+
+/* cards */
+.kss-cards{display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:24px; margin:32px 0}
 .kss-card{background:var(--card-bg); border-radius:18px; padding:22px 20px; box-shadow:var(--shadow); text-align:center}
 .kss-card-icon{width:56px; height:56px; display:grid; place-items:center; margin:0 auto 12px; border-radius:50%; color:var(--accent); background:#fff2ea; box-shadow:inset 0 0 0 1px #ffd9c8}
 .kss-card-title{font-weight:700; color:#7b3a22; margin-bottom:8px}
 .kss-card-desc{color:#5b5243; min-height:48px}
-/* about cards */ .about-cards{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:28px; margin-top:22px}
+
+/* about cards */
+.about-cards{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:28px; margin-top:22px}
 .about-card{text-align:center}
 .about-img{width:100%; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.18)}
-.about-title{margin-top:10px; font-weight:800; color:#c25322; }
+.about-title{margin-top:10px; font-weight:800; color:#c25322}
 .about-desc{color:#3c2b17; max-width:320px; margin:6px auto 0}
-/* shared form */ .kss-form-title{color:#b6471c; margin: 6px 0 16px; font-weight:700;    text-align: center;}
+
+/* shared form */
+.kss-form-title{color:#b6471c; margin: 6px 0 16px; font-weight:700}
 .kss-form-card{background:#fff; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.12); padding:22px; border:1px solid #f1e5cf}
 .kss-form-grid{display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:16px 20px; margin-bottom:10px}
 .kss-section-sub{color:#94641a; font-weight:700; margin:10px 0}
@@ -683,8 +494,10 @@ body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,
 .kss-alert{margin:6px 0 0; padding:10px 12px; border-radius:8px; font-weight:600}
 .kss-alert.ok{background:#eaf8ec; color:#20663a; border:1px solid #bce3c6}
 .kss-alert.err{background:#fff1f0; color:#8a1a12; border:1px solid #ffd2cf}
-.kss-submit{background-color: #F54800;width:100%; margin-top:12px}
-/* contact */ .kss-contact-card{background:#fff; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.12); padding:22px; border:1px solid #f1e5cf}
+.kss-submit{background-color:#F54800;width:100%; margin-top:12px}
+
+/* contact */
+.kss-contact-card{background:#fff; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.12); padding:22px; border:1px solid #f1e5cf}
 .contact-grid{display:grid; grid-template-columns:2fr 1fr; gap:28px; align-items:start}
 .contact-grid .full{grid-column:1 / -1}
 .send-btn{border-radius: 8px; background-color: #F54800; width:100%; margin-top:10px}
@@ -692,10 +505,18 @@ body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,
 .email-line{display:flex; gap:8px; align-items:center}
 .email-line a{color:#7b3a22; font-weight:700; text-decoration:none}
 .email-line a:hover{text-decoration:underline}
-/* Generic */ .kss-generic h2{color:#b6471c} .kss-generic p{max-width:720px; color:#3c2b17}
-/* responsive */ @media (max-width: 980px){ .kss-cards{grid-template-columns:1fr} .about-cards{grid-template-columns:1fr} .kss-sidebar{width:176px} }
-@media (max-width: 700px){ .kss-app{flex-direction:column} .kss-sidebar{width:100%; border-right:none; border-bottom:1px solid #f0e2c9} .kss-nav{flex-direction:row; flex-wrap:wrap} .kss-form-grid{grid-template-columns:1fr} .contact-grid{grid-template-columns:1fr} }
-`
 
-
-;
+/* responsive tweaks */
+@media (max-width: 980px){
+  .kss-cards{grid-template-columns:1fr}
+  .about-cards{grid-template-columns:1fr}
+  .kss-sidebar{width:176px}
+}
+@media (max-width: 700px){
+  .kss-app{flex-direction:column}
+  .kss-sidebar{width:100%; border-right:none; border-bottom:1px solid #f0e2c9}
+  .kss-nav{flex-direction:row; flex-wrap:wrap}
+  .kss-form-grid{grid-template-columns:1fr}
+  .contact-grid{grid-template-columns:1fr}
+}
+`;
