@@ -40,7 +40,7 @@ export default function KammaSevaSamithiSite() {
         {active === "donate" && <Donate />}
         {active === "contact" && <Contact />}
         {active === "event" && <Event />}
-        {active === "gallery" && <Placeholder title="Gallery" />}
+        {active === "gallery" && <Gallery />}
       </main>
     </div>
   );
@@ -133,7 +133,6 @@ function Event() {
     setErr("");
     const { firstName, lastName, email, phone, type } = form;
 
-    // validation
     if (!firstName.trim().match(/^[A-Za-z][A-Za-z\s'-]*$/)) { setErr("Enter a valid First Name (letters only)."); return; }
     if (!lastName.trim().match(/^[A-Za-z][A-Za-z\s'-]*$/)) { setErr("Enter a valid Last Name (letters only)."); return; }
     if (!email.trim().match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { setErr("Enter a valid Email."); return; }
@@ -208,11 +207,11 @@ function Event() {
               </div>
 
               {form.type === "family" && (
-                <>
-                  <div className="kss-field">
+                <div className="adults-kids-row">
+                  <div className="mini-field">
                     <label className="kss-label">Adults</label>
                     <select
-                      className="kss-input"
+                      className="kss-input mini"
                       name="adults"
                       value={form.adults}
                       onChange={onChange}
@@ -223,10 +222,10 @@ function Event() {
                     </select>
                   </div>
 
-                  <div className="kss-field">
+                  <div className="mini-field">
                     <label className="kss-label">Kids</label>
                     <select
-                      className="kss-input"
+                      className="kss-input mini"
                       name="kids"
                       value={form.kids}
                       onChange={onChange}
@@ -236,7 +235,7 @@ function Event() {
                       ))}
                     </select>
                   </div>
-                </>
+                </div>
               )}
             </div>
 
@@ -316,6 +315,19 @@ function AboutCard({ img, title, desc }) {
   );
 }
 
+function Gallery() {
+  const EMBED_HTML = `<iframe
+    src="https://eliteliveproductions.smugmug.com/frame/slideshow?key=Nz43xR&speed=3&transition=fade&autoStart=1&captions=0&navigation=0&playButton=0&randomize=0&transitionSpeed=2"
+    frameborder="0" scrolling="no" allow="fullscreen" allowfullscreen
+  ></iframe>`;
+
+  return (
+    <div className="gallery-embed">
+      <div className="embed-box" dangerouslySetInnerHTML={{ __html: EMBED_HTML }} />
+    </div>
+  );
+}
+
 function Field({ label, required, placeholder, name, type="text", value, onChange, as="input" }) {
   return (
     <div className="kss-field">
@@ -368,7 +380,7 @@ function Contact() {
             <div className="kss-section-sub">Email</div>
             <div className="email-line">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 0 8 6 8-6" stroke="#E6602E" strokeWidth="1.8"/></svg>
-              <a href="mailto:info@kammassevasamithi.org">info@kammassevasamithi.org</a>
+              <a href="mailto:admin@thekk.org">admin@thekk.org</a>
             </div>
           </div>
         </div>
@@ -414,6 +426,47 @@ const globalCSS = `
   border-color:#F3B27A;
   color:#7B3A22;
   box-shadow:inset 0 0 0 1.5px #F3B27A, 0 1px 1px rgba(0,0,0,.04);
+}
+
+/* Small side-by-side Adults/Kids row */
+.adults-kids-row{
+  display:flex;
+  gap:12px;
+  align-items:flex-end;
+}
+.mini-field{ width:140px; }
+.kss-input.mini{ height:36px; padding:6px 10px; }
+
+/* Gallery */
+.gallery-embed{ max-width:1100px; margin:0 auto; padding:24px }
+.embed-box{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  border-radius:14px;
+  overflow:hidden;
+  background:#000;
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+}
+.embed-box iframe{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  border:0; display:block;
+}
+
+/* Phones: taller aspect for slideshow; modal padding for full buttons */
+@media (max-width: 640px){
+  .gallery-embed{ padding:12px }
+  .embed-box{ aspect-ratio:4/5; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,.14) }
+  .reg-modal{ padding:16px }
+  .reg-actions{ justify-content:stretch }
+  .reg-actions .btn{ flex:1 }
+}
+
+/* Small tablets */
+@media (min-width: 641px) and (max-width: 900px){
+  .gallery-embed{ padding:16px }
+  .embed-box{ aspect-ratio:4/3 }
 }
 
 /* One-card event layout */
