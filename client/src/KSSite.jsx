@@ -106,8 +106,8 @@ function Home({ onNav }) {
 /* ---------------- Event (with modal) ---------------- */
 
 function Event() {
-  const STRIPE_SINGLE = "https://buy.stripe.com/test_dRm7sL2CD0Jj8as2eugbm00";
-  const STRIPE_FAMILY = "https://buy.stripe.com/test_3cIfZh7WX0JjgGY3iygbm01";
+  const STRIPE_SINGLE = "https://buy.stripe.com/7sY28relC7BX4Xi4wies002";
+  const STRIPE_FAMILY = "https://buy.stripe.com/00wbJ1b9qf4p9dy3sees003";
 
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
