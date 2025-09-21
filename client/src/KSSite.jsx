@@ -257,9 +257,14 @@ function Event() {
 
             <div className="reg-actions">
               <button className="btn ghost" onClick={close} disabled={loading}>Cancel</button>
-              <button className="btn primary" onClick={submit} disabled={loading}>
-                {loading ? "Saving..." : "Continue to Payment"}
+              <button
+                className="btn primary"
+                onClick={submit}
+                disabled={loading || !agree}
+              >
+                {loading ? "Saving..." : "Continue to Donation"}
               </button>
+
             </div>
           </div>
         </div>
@@ -328,7 +333,7 @@ function Gallery() {
   );
 }
 
-function Field({ label, required, placeholder, name, type="text", value, onChange, as="input" }) {
+function Field({ label, required, placeholder, name, type = "text", value, onChange, as = "input" }) {
   return (
     <div className="kss-field">
       <label className="kss-label">
@@ -356,7 +361,7 @@ function Contact() {
       if (!res.ok) throw new Error(data?.message || "Failed to send");
       setStatus({ ok: true, msg: "Message sent. We'll get back to you soon." });
       setForm({ name: "", email: "", message: "" });
-    } catch (err) { setStatus({ ok:false, msg: err.message }); }
+    } catch (err) { setStatus({ ok: false, msg: err.message }); }
   };
 
   return (
@@ -379,7 +384,7 @@ function Contact() {
           <div className="contact-side">
             <div className="kss-section-sub">Email</div>
             <div className="email-line">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 0 8 6 8-6" stroke="#E6602E" strokeWidth="1.8"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 0 8 6 8-6" stroke="#E6602E" strokeWidth="1.8" /></svg>
               <a href="mailto:admin@thekk.org">admin@thekk.org</a>
             </div>
           </div>
@@ -390,7 +395,7 @@ function Contact() {
 }
 
 function Donate() { return (<div className="kss-generic"><h2>Donate</h2><p>Your generous contributions support cultural events, community programs, and temple service activities.</p><button className="btn primary">Donate Now</button></div>); }
-function Placeholder({ title }){ return (<div className="kss-generic"><h2>{title}</h2><p>Coming soon.</p></div>); }
+function Placeholder({ title }) { return (<div className="kss-generic"><h2>{title}</h2><p>Coming soon.</p></div>); }
 
 /* ---------------- Styles ---------------- */
 
@@ -427,6 +432,12 @@ const globalCSS = `
   color:#7B3A22;
   box-shadow:inset 0 0 0 1.5px #F3B27A, 0 1px 1px rgba(0,0,0,.04);
 }
+  .btn.primary:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+  filter:none;
+}
+
 
 /* Small side-by-side Adults/Kids row */
 .adults-kids-row{
