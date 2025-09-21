@@ -9,8 +9,41 @@ const NAV_ITEMS = [
   { key: "about", label: "About US" },
 ];
 
+
+const PATHS = {
+  home: "/",
+  event: "/2025registration",
+  donate: "/donate",
+  contact: "/contact",
+  gallery: "/gallery",
+  about: "/about",
+};
+const KEY_BY_PATH = new Map(Object.entries(PATHS).map(([k, p]) => [p, k]));
+KEY_BY_PATH.set("/2025registartion", "event"); // accept misspelling too
+
 export default function KammaSevaSamithiSite() {
   const [active, setActive] = useState("home");
+
+  const routeTo = (key, replace = false) => {
+    const path = PATHS[key] || "/";
+    try {
+      if (replace) history.replaceState({ key }, "", path);
+      else history.pushState({ key }, "", path);
+    } catch {}
+    setActive(key);
+  };
+
+  React.useEffect(() => {
+    const initialKey = KEY_BY_PATH.get(location.pathname) || "home";
+    routeTo(initialKey, true);
+    const onPop = () => {
+      const k = KEY_BY_PATH.get(location.pathname) || "home";
+      setActive(k);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="kss-app">
@@ -26,7 +59,7 @@ export default function KammaSevaSamithiSite() {
             <button
               key={item.key}
               className={"kss-nav-item " + (active === item.key ? "active" : "")}
-              onClick={() => setActive(item.key)}
+              onClick={() => routeTo(item.key)}
             >
               {item.label}
             </button>
@@ -35,7 +68,7 @@ export default function KammaSevaSamithiSite() {
       </aside>
 
       <main className="kss-main">
-        {active === "home" && <Home onNav={setActive} />}
+        {active === "home" && <Home onNav={routeTo} />}
         {active === "about" && <About />}
         {active === "donate" && <Donate />}
         {active === "contact" && <Contact />}
@@ -46,7 +79,7 @@ export default function KammaSevaSamithiSite() {
   );
 }
 
-/* ---------------- Home ---------------- */
+
 
 function Home({ onNav }) {
   return (
@@ -103,7 +136,7 @@ function Home({ onNav }) {
   );
 }
 
-/* ---------------- Event (with modal) ---------------- */
+
 
 function Event() {
   const STRIPE_SINGLE = "https://buy.stripe.com/7sY28relC7BX4Xi4wies002";
@@ -178,6 +211,7 @@ function Event() {
         role="button"
         tabIndex={0}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onCardClick()}
+        aria-label="Open 2025 Vanabhojanalu registration"
       >
         <img className="event-img" src="/images/ntrbanner.jpeg" alt="2025 Vanabhojanalu" />
         <div className="event-meta">
@@ -257,14 +291,9 @@ function Event() {
 
             <div className="reg-actions">
               <button className="btn ghost" onClick={close} disabled={loading}>Cancel</button>
-              <button
-                className="btn primary"
-                onClick={submit}
-                disabled={loading || !agree}
-              >
+              <button className="btn primary" onClick={submit} disabled={loading || !agree}>
                 {loading ? "Saving..." : "Continue to Donation"}
               </button>
-
             </div>
           </div>
         </div>
@@ -273,7 +302,7 @@ function Event() {
   );
 }
 
-/* ---------------- Small helpers ---------------- */
+
 
 function InfoCard({ icon, title, desc, cta, onClick }) {
   return (
@@ -333,7 +362,7 @@ function Gallery() {
   );
 }
 
-function Field({ label, required, placeholder, name, type = "text", value, onChange, as = "input" }) {
+function Field({ label, required, placeholder, name, type="text", value, onChange, as="input" }) {
   return (
     <div className="kss-field">
       <label className="kss-label">
@@ -361,7 +390,7 @@ function Contact() {
       if (!res.ok) throw new Error(data?.message || "Failed to send");
       setStatus({ ok: true, msg: "Message sent. We'll get back to you soon." });
       setForm({ name: "", email: "", message: "" });
-    } catch (err) { setStatus({ ok: false, msg: err.message }); }
+    } catch (err) { setStatus({ ok:false, msg: err.message }); }
   };
 
   return (
@@ -384,8 +413,8 @@ function Contact() {
           <div className="contact-side">
             <div className="kss-section-sub">Email</div>
             <div className="email-line">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 0 8 6 8-6" stroke="#E6602E" strokeWidth="1.8" /></svg>
-              <a href="mailto:admin@thekk.org">admin@thekk.org</a>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 0 8 6 8-6" stroke="#E6602E" strokeWidth="1.8"/></svg>
+              <a href="mailto:info@kammassevasamithi.org">info@kammassevasamithi.org</a>
             </div>
           </div>
         </div>
@@ -395,7 +424,7 @@ function Contact() {
 }
 
 function Donate() { return (<div className="kss-generic"><h2>Donate</h2><p>Your generous contributions support cultural events, community programs, and temple service activities.</p><button className="btn primary">Donate Now</button></div>); }
-function Placeholder({ title }) { return (<div className="kss-generic"><h2>{title}</h2><p>Coming soon.</p></div>); }
+function Placeholder({ title }){ return (<div className="kss-generic"><h2>{title}</h2><p>Coming soon.</p></div>); }
 
 /* ---------------- Styles ---------------- */
 
@@ -432,12 +461,6 @@ const globalCSS = `
   color:#7B3A22;
   box-shadow:inset 0 0 0 1.5px #F3B27A, 0 1px 1px rgba(0,0,0,.04);
 }
-  .btn.primary:disabled{
-  opacity:.5;
-  cursor:not-allowed;
-  filter:none;
-}
-
 
 /* Small side-by-side Adults/Kids row */
 .adults-kids-row{
@@ -500,6 +523,7 @@ const globalCSS = `
 }
 .btn.primary{ background:#F54800; color:#fff; border:none; }
 .btn.primary:hover{ filter:brightness(.97); }
+.btn.primary:disabled{ opacity:.5; cursor:not-allowed; filter:none; }
 .btn.ghost, .btn.outline{ background:#fff; border:1px solid #e8d9bf; color:#2b1f16; }
 
 /* base theme */
