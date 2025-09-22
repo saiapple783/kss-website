@@ -156,7 +156,8 @@ function Event() {
   const [agree, setAgree] = React.useState(false);
   const [err, setErr] = React.useState("");
 
-  const NUM_OPTS = React.useMemo(() => Array.from({ length: 31 }, (_, i) => i), []);
+  
+const NUM_OPTS = React.useMemo(() => Array.from({ length: 5 }, (_, i) => i), []);
 
   const onCardClick = () => setOpen(true);
   const close = () => { if (!loading) setOpen(false); };
