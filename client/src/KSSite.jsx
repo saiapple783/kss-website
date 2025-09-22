@@ -139,8 +139,8 @@ function Home({ onNav }) {
 
 
 function Event() {
-  const STRIPE_SINGLE = "https://buy.stripe.com/7sY28relC7BX4Xi4wies002";
-  const STRIPE_FAMILY = "https://buy.stripe.com/00wbJ1b9qf4p9dy3sees003";
+  const STRIPE_SINGLE = "https://buy.stripe.com/eVqfZhgtKe0lcpK7Iues004";
+  const STRIPE_FAMILY = "https://buy.stripe.com/eVqfZhgtKe0lcpK7Iues004";
 
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
