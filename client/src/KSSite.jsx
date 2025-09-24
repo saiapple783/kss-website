@@ -19,7 +19,7 @@ const PATHS = {
   about: "/about",
 };
 const KEY_BY_PATH = new Map(Object.entries(PATHS).map(([k, p]) => [p, k]));
-KEY_BY_PATH.set("/2025registartion", "event"); // accept misspelling too
+KEY_BY_PATH.set("/2025registartion", "event"); // accept misspelling too test
 
 export default function KammaSevaSamithiSite() {
   const [active, setActive] = useState("home");
