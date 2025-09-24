@@ -209,7 +209,7 @@ const NUM_OPTS = React.useMemo(() => Array.from({ length: 5 }, (_, i) => i), [])
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      window.location = 'https://buy.stripe.com/eVqfZhgtKe0lcpK7Iues004';
+      window.location = STRIPE_SINGLE;
 
     } catch (e) {
       setErr(e.message || "Server error");
