@@ -6,36 +6,8 @@ import mongoose from 'mongoose'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import Stripe from 'stripe';
-const stripe = new Stripe(process.env.STRIPE_SECRET);
-
 const app = express()
-app.post('/api/create-checkout-session', async (req, res) => {
-  const { firstName, lastName, email, phone, type, adults, kids } = req.body;
-  try {
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: [{
-        // 👇 Hard-code a single product/amount instead of using price IDs
-        price_data: {
-          currency: 'usd',
-          product_data: { name: 'Donation' },
-          unit_amount: 2000, // amount in cents (e.g. 2000 = $20)
-        },
-        quantity: 1,
-      }],
-      success_url: `https://thekss.org/payment`,
-      cancel_url: `https://thekss.org/`,
-      metadata: { firstName, lastName, email, phone, type, adults, kids }
-    });
-    res.json({ sessionUrl: session.url });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Stripe session error' });
-  }
-});
-
-app.use(express.json())
+const stripe = new Stripe(process.env.STRIPE_SECRET);
 
 app.post('/api/stripe-webhook',
   express.raw({ type: 'application/json' }),
@@ -65,6 +37,38 @@ app.post('/api/stripe-webhook',
     res.sendStatus(200);
   }
 );
+
+app.use(express.json())
+
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { firstName, lastName, email, phone, type, adults, kids } = req.body;
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [{
+        // 👇 Hard-code a single product/amount instead of using price IDs
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'Donation' },
+          unit_amount: 2000, // amount in cents (e.g. 2000 = $20)
+        },
+        quantity: 1,
+      }],
+      success_url: `https://thekss.org/payment`,
+      cancel_url: `https://thekss.org/`,
+      metadata: { firstName, lastName, email, phone, type, adults, kids }
+    });
+    res.json({ sessionUrl: session.url });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Stripe session error' });
+  }
+});
+
+
+
+
 
 // CORS for local dev & production domains
 const allowedOrigins = [
