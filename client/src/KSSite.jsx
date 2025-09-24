@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { key: "contact", label: "Contact" },
   { key: "gallery", label: "Gallery" },
   { key: "about", label: "About US" },
+  {key:"payment", label: "Payment"}
 ];
 
 
@@ -17,6 +18,7 @@ const PATHS = {
   contact: "/contact",
   gallery: "/gallery",
   about: "/about",
+   payment: "/payment"
 };
 const KEY_BY_PATH = new Map(Object.entries(PATHS).map(([k, p]) => [p, k]));
 KEY_BY_PATH.set("/2025registartion", "event"); // accept misspelling too test
@@ -74,6 +76,7 @@ export default function KammaSevaSamithiSite() {
         {active === "contact" && <Contact />}
         {active === "event" && <Event />}
         {active === "gallery" && <Gallery />}
+        {active === "payment" && <Payment />}
       </main>
     </div>
   );
@@ -178,24 +181,36 @@ const NUM_OPTS = React.useMemo(() => Array.from({ length: 5 }, (_, i) => i), [])
     if (!agree) { setErr("Please agree to the Terms & Conditions."); return; }
 
     setLoading(true);
+    // try {
+    //   const res = await fetch("/api/vanabhojanalu", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       firstName: form.firstName.trim(),
+    //       lastName: form.lastName.trim(),
+    //       email: form.email.trim(),
+    //       phone: form.phone.trim(),
+    //       type: form.type,
+    //       adults: Number(form.adults || 0),
+    //       kids: Number(form.kids || 0),
+    //     }),
+    //   });
+    //   const data = await res.json().catch(() => ({}));
+    //   if (!res.ok) throw new Error(data?.message || "Cannot submit");
+
+    //   window.location = form.type === "family" ? STRIPE_FAMILY : STRIPE_SINGLE;
+    // } catch (e) {
+    //   setErr(e.message || "Server error");
+    //   setLoading(false);
+    // }
     try {
-      const res = await fetch("/api/vanabhojanalu", {
+      const res = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: form.firstName.trim(),
-          lastName: form.lastName.trim(),
-          email: form.email.trim(),
-          phone: form.phone.trim(),
-          type: form.type,
-          adults: Number(form.adults || 0),
-          kids: Number(form.kids || 0),
-        }),
+        body: JSON.stringify(form),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.message || "Cannot submit");
+      window.location = 'https://buy.stripe.com/eVqfZhgtKe0lcpK7Iues004';
 
-      window.location = form.type === "family" ? STRIPE_FAMILY : STRIPE_SINGLE;
     } catch (e) {
       setErr(e.message || "Server error");
       setLoading(false);
@@ -346,6 +361,44 @@ function AboutCard({ img, title, desc }) {
       <img src={img} alt={title} className="about-img" />
       <div className="about-title">{title}</div>
       <div className="about-desc">{desc}</div>
+    </div>
+  );
+}
+
+function Payment() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "40px",
+      }}
+    >
+      {/* ✅ Green check circle */}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="80"
+        height="80"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="green"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ marginBottom: "20px" }}
+      >
+        <circle cx="12" cy="12" r="10" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+
+      <h2 style={{ color: "green", fontSize: "1.8rem", textAlign: "center" }}>
+        Payment is successful!
+      </h2>
+      <p style={{ marginTop: "10px", textAlign: "center" }}>
+        Thank you for your generous donation.
+      </p>
     </div>
   );
 }
