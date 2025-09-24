@@ -6,7 +6,7 @@ import mongoose from 'mongoose'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import Stripe from 'stripe';
-const stripe = new Stripe('sk_test_51S8lWGFASOdQE6RBO4D69yGlgoVAPl0FhEov5AqWuuVeOWJvc4RpYVZJygygFOM6uJf24qw1RvuxXIlprgNS9m1D00NXtJVnOB');
+const stripe = new Stripe(process.env.STRIPE_SECRET);
 
 const app = express()
 app.post('/api/create-checkout-session', async (req, res) => {
@@ -43,7 +43,7 @@ app.post('/api/stripe-webhook',
     const sig = req.headers['stripe-signature'];
     let event;
     try {
-      event = stripe.webhooks.constructEvent(req.body, sig, 'whsec_szmpLfgE78ox1tanBd5JaFdHVc4xmQSf');
+      event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_KEY);
     } catch (err) {
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
