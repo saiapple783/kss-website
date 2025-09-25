@@ -7,7 +7,6 @@ const NAV_ITEMS = [
   { key: "contact", label: "Contact" },
   { key: "gallery", label: "Gallery" },
   { key: "about", label: "About US" },
-  { key: "payment", label: "Payment" }
 ];
 
 
