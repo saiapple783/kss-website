@@ -43,7 +43,7 @@ app.post(
          adults:    Number(session.metadata.adults || 0),
          kids:      Number(session.metadata.kids || 0),
          email: session.metadata.email,
-         amount:   Number(session.metadata.amount || 0),
+         amount:   Number(session.metadata.amount / 100 || 0),
        }).catch(err => console.error('DB save error', err));
 
     }
