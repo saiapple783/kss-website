@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import bodyParser from 'body-parser'
 import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
@@ -9,31 +10,44 @@ import Stripe from 'stripe';
 const app = express()
 const stripe = new Stripe(process.env.STRIPE_SECRET);
 
-app.post('/api/stripe-webhook',
-  express.raw({ type: 'application/json' }),
+// Remove or narrow any global bodyParser.text() if possible
+ 
+app.post(
+  '/api/stripe-webhook',
+  bodyParser.raw({ type: 'application/json' }),
   (req, res) => {
     const sig = req.headers['stripe-signature'];
+ 
     let event;
     try {
-      event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_KEY);
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_KEY
+      );
     } catch (err) {
+      console.error('❌ Signature verification failed:', err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
-
+ 
+    // ✅ Match the event you actually triggered
     if (event.type === 'checkout.session.completed') {
-      const s = event.data.object;
-      console.log('✅ Payment success. Metadata received from Stripe:', s.metadata);
+      const session = event.data.object;
+      console.log('✅ Payment success. Metadata received:', session.metadata);
+      // Save to DB if needed
       Vanabhojanalu.create({
         firstName: s.metadata.firstName,
-        lastName:  s.metadata.lastName,
-        phone:     s.metadata.phone,
-        type:      s.metadata.type,
-        adults:    Number(s.metadata.adults || 0),
-        kids:      Number(s.metadata.kids || 0),
-        email: s.metadata.email
+         lastName:  s.metadata.lastName,
+         phone:     s.metadata.phone,
+         type:      s.metadata.type,
+         adults:    Number(s.metadata.adults || 0),
+         kids:      Number(s.metadata.kids || 0),
+         email: s.metadata.email,
+         amount:   Number(s.metadata.amount || 0),
+       }).catch(err => console.error('DB save error', err));
 
-      }).catch(err => console.error('DB save error', err));
     }
+ 
     res.sendStatus(200);
   }
 );
@@ -41,7 +55,7 @@ app.post('/api/stripe-webhook',
 app.use(express.json())
 
 app.post('/api/create-checkout-session', async (req, res) => {
-  const { firstName, lastName, email, phone, type, adults, kids } = req.body;
+  const { firstName, lastName, email, phone, type, adults, kids, amount } = req.body;
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -51,13 +65,13 @@ app.post('/api/create-checkout-session', async (req, res) => {
         price_data: {
           currency: 'usd',
           product_data: { name: 'Donation' },
-          unit_amount: 2000, // amount in cents (e.g. 2000 = $20)
+          unit_amount: amount, // amount in cents (e.g. 2000 = $20)
         },
         quantity: 1,
       }],
       success_url: `https://thekss.org/payment`,
       cancel_url: `https://thekss.org/`,
-      metadata: { firstName, lastName, email, phone, type, adults, kids }
+      metadata: { firstName, lastName, email, phone, type, adults, kids, amount }
     });
     res.json({ sessionUrl: session.url });
   } catch (err) {
@@ -108,11 +122,13 @@ const Registration = mongoose.models.Registration || mongoose.model('Registratio
 const VanabhojanaluSchema = new mongoose.Schema(
   {
     firstName: { type: String, required: true, trim: true },
-    lastName:  { type: String, required: true, trim: true },
-    phone:     { type: String, required: true, trim: true },
-    type:      { type: String, enum: ['single', 'family'], required: true },
-    adults:    { type: Number, default: 0, min: 0 }, // only relevant for family
-    kids:      { type: Number, default: 0, min: 0 }, // only relevant for family
+    lastName: { type: String, required: true, trim: true },
+    phone: { type: String, required: true, trim: true },
+    type: { type: String, enum: ['single', 'family'], required: true },
+    adults: { type: Number, default: 0, min: 0 }, // only relevant for family
+    kids: { type: Number, default: 0, min: 0 }, 
+    amount: { type: Number, default: 0, min: 0 }, // in cents
+    // only relevant for family
   },
   { timestamps: true, collection: '2025vanabhojanalu' }
 )
@@ -141,7 +157,7 @@ app.post('/api/contactus', async (req, res) => {
 app.post('/api/registration', async (req, res) => {
   try {
     const payload = req.body || {}
-    for (const f of ['firstName','lastName','email','phoneUS','village','mandal','district']) {
+    for (const f of ['firstName', 'lastName', 'email', 'phoneUS', 'village', 'mandal', 'district']) {
       if (!payload[f] || String(payload[f]).trim() === '') {
         return res.status(400).json({ message: `Missing field: ${f}` })
       }

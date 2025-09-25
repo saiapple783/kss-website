@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { key: "contact", label: "Contact" },
   { key: "gallery", label: "Gallery" },
   { key: "about", label: "About US" },
-  {key:"payment", label: "Payment"}
+  { key: "payment", label: "Payment" }
 ];
 
 
@@ -18,7 +18,7 @@ const PATHS = {
   contact: "/contact",
   gallery: "/gallery",
   about: "/about",
-   payment: "/payment"
+  payment: "/payment"
 };
 const KEY_BY_PATH = new Map(Object.entries(PATHS).map(([k, p]) => [p, k]));
 KEY_BY_PATH.set("/2025registartion", "event"); // accept misspelling too test
@@ -31,7 +31,7 @@ export default function KammaSevaSamithiSite() {
     try {
       if (replace) history.replaceState({ key }, "", path);
       else history.pushState({ key }, "", path);
-    } catch {}
+    } catch { }
     setActive(key);
   };
 
@@ -142,8 +142,8 @@ function Home({ onNav }) {
 
 
 function Event() {
-  const STRIPE_SINGLE = "https://buy.stripe.com/eVqfZhgtKe0lcpK7Iues004";
-  const STRIPE_FAMILY = "https://buy.stripe.com/eVqfZhgtKe0lcpK7Iues004";
+  // const STRIPE_SINGLE = "https://buy.stripe.com/test_28E6oH0uvfEdfCU2eugbm02";
+  // const STRIPE_FAMILY = "https://buy.stripe.com/test_28E6oH0uvfEdfCU2eugbm02";
 
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -155,12 +155,13 @@ function Event() {
     type: "single",
     adults: 0,
     kids: 0,
+    amount: "",
   });
   const [agree, setAgree] = React.useState(false);
   const [err, setErr] = React.useState("");
 
-  
-const NUM_OPTS = React.useMemo(() => Array.from({ length: 5 }, (_, i) => i), []);
+
+  const NUM_OPTS = React.useMemo(() => Array.from({ length: 5 }, (_, i) => i), []);
 
   const onCardClick = () => setOpen(true);
   const close = () => { if (!loading) setOpen(false); };
@@ -168,12 +169,13 @@ const NUM_OPTS = React.useMemo(() => Array.from({ length: 5 }, (_, i) => i), [])
 
   const submit = async () => {
     setErr("");
-    const { firstName, lastName, email, phone, type } = form;
+    const { firstName, lastName, email, phone, type, amount } = form;
 
     if (!firstName.trim().match(/^[A-Za-z][A-Za-z\s'-]*$/)) { setErr("Enter a valid First Name (letters only)."); return; }
     if (!lastName.trim().match(/^[A-Za-z][A-Za-z\s'-]*$/)) { setErr("Enter a valid Last Name (letters only)."); return; }
     if (!email.trim().match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { setErr("Enter a valid Email."); return; }
     if (!phone.trim().match(/^\d{10,15}$/)) { setErr("Phone Number should be digits only (10–15)."); return; }
+    if (amount < 1) { setErr("Minimum donation is $50."); return; }
     if (type === "family" && Number(form.adults || 0) + Number(form.kids || 0) <= 0) {
       setErr("For Family, set Adults or Kids > 0.");
       return;
@@ -207,9 +209,13 @@ const NUM_OPTS = React.useMemo(() => Array.from({ length: 5 }, (_, i) => i), [])
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          amount: Number(amount) * 100  // convert dollars → cents
+        })
       });
-      window.location = STRIPE_SINGLE;
+      const { sessionUrl } = await res.json();
+      window.location = sessionUrl;
 
     } catch (e) {
       setErr(e.message || "Server error");
@@ -247,7 +253,17 @@ const NUM_OPTS = React.useMemo(() => Array.from({ length: 5 }, (_, i) => i), [])
               <Field label="Last Name" required name="lastName" value={form.lastName} onChange={onChange} />
               <Field label="Email" required type="email" placeholder="e.g., you@example.com" name="email" value={form.email} onChange={onChange} />
               <Field label="Phone Number" required placeholder="e.g., 2145551234" name="phone" value={form.phone} onChange={onChange} />
-
+              <Field
+                label="Donation Amount (USD)"
+                required
+                name="amount"
+                type="number"
+                min="1"
+                step="0.01"
+                placeholder="Minimum $50 Donation"
+                value={form.amount}
+                onChange={onChange}
+              />
               <div className="kss-field">
                 <label className="kss-label">You are <span className="req">*</span></label>
                 <div className="reg-choice">
@@ -416,7 +432,7 @@ function Gallery() {
   );
 }
 
-function Field({ label, required, placeholder, name, type="text", value, onChange, as="input" }) {
+function Field({ label, required, placeholder, name, type = "text", value, onChange, as = "input" }) {
   return (
     <div className="kss-field">
       <label className="kss-label">
@@ -444,7 +460,7 @@ function Contact() {
       if (!res.ok) throw new Error(data?.message || "Failed to send");
       setStatus({ ok: true, msg: "Message sent. We'll get back to you soon." });
       setForm({ name: "", email: "", message: "" });
-    } catch (err) { setStatus({ ok:false, msg: err.message }); }
+    } catch (err) { setStatus({ ok: false, msg: err.message }); }
   };
 
   return (
@@ -467,7 +483,7 @@ function Contact() {
           <div className="contact-side">
             <div className="kss-section-sub">Email</div>
             <div className="email-line">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 0 8 6 8-6" stroke="#E6602E" strokeWidth="1.8"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Zm0 0 8 6 8-6" stroke="#E6602E" strokeWidth="1.8" /></svg>
               <a href="mailto:info@kammassevasamithi.org">info@kammassevasamithi.org</a>
             </div>
           </div>
@@ -478,7 +494,7 @@ function Contact() {
 }
 
 function Donate() { return (<div className="kss-generic"><h2>Donate</h2><p>Your generous contributions support cultural events, community programs, and temple service activities.</p><button className="btn primary">Donate Now</button></div>); }
-function Placeholder({ title }){ return (<div className="kss-generic"><h2>{title}</h2><p>Coming soon.</p></div>); }
+function Placeholder({ title }) { return (<div className="kss-generic"><h2>{title}</h2><p>Coming soon.</p></div>); }
 
 /* ---------------- Styles ---------------- */
 
