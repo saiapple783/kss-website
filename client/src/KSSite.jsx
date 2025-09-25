@@ -175,7 +175,7 @@ function Event() {
     if (!lastName.trim().match(/^[A-Za-z][A-Za-z\s'-]*$/)) { setErr("Enter a valid Last Name (letters only)."); return; }
     if (!email.trim().match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { setErr("Enter a valid Email."); return; }
     if (!phone.trim().match(/^\d{10,15}$/)) { setErr("Phone Number should be digits only (10–15)."); return; }
-    if (amount < 1) { setErr("Minimum donation is $50."); return; }
+    if (amount < 50) { setErr("Minimum donation is $50."); return; }
     if (type === "family" && Number(form.adults || 0) + Number(form.kids || 0) <= 0) {
       setErr("For Family, set Adults or Kids > 0.");
       return;
@@ -211,7 +211,7 @@ function Event() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          amount: Number(amount) * 100  // convert dollars → cents
+          amount: Number(amount)   // convert dollars → cents
         })
       });
       const { sessionUrl } = await res.json();
