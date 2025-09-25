@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import bodyParser from 'body-parser'
+//import bodyParser from 'body-parser'
 import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
@@ -14,7 +14,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET);
  
 app.post(
   '/api/stripe-webhook',
-  bodyParser.raw({ type: 'application/json' }),
+  express.raw({ type: 'application/json' }),
   (req, res) => {
     const sig = req.headers['stripe-signature'];
  
@@ -36,14 +36,14 @@ app.post(
       console.log('✅ Payment success. Metadata received:', session.metadata);
       // Save to DB if needed
       Vanabhojanalu.create({
-        firstName: s.metadata.firstName,
-         lastName:  s.metadata.lastName,
-         phone:     s.metadata.phone,
-         type:      s.metadata.type,
-         adults:    Number(s.metadata.adults || 0),
-         kids:      Number(s.metadata.kids || 0),
-         email: s.metadata.email,
-         amount:   Number(s.metadata.amount || 0),
+        firstName: session.metadata.firstName,
+         lastName:  session.metadata.lastName,
+         phone:     session.metadata.phone,
+         type:      session.metadata.type,
+         adults:    Number(session.metadata.adults || 0),
+         kids:      Number(session.metadata.kids || 0),
+         email: session.metadata.email,
+         amount:   Number(session.metadata.amount || 0),
        }).catch(err => console.error('DB save error', err));
 
     }
