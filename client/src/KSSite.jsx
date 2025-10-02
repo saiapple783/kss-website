@@ -3,7 +3,7 @@ import React, { useState } from "react";
 const NAV_ITEMS = [
   { key: "home", label: "Home" },
   { key: "event", label: "2025 Vanabhojanalu Registration" },
-  { key: "donate", label: "Donate" },
+  //{ key: "donate", label: "Donate" },
   { key: "contact", label: "Contact" },
   { key: "gallery", label: "Gallery" },
   { key: "about", label: "About US" },
